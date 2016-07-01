@@ -38,26 +38,47 @@ class ViewController: UIViewController {
         // Do any additional setup after loading the view, typically from a nib.
         
         blurview.effect = nil
-        blurEffectView(enable: true, blurView: blurview)
+        blurEffectView(enable: true, blurView: blurview, percentage:0.3)
         
-        let delayTime = dispatch_time(DISPATCH_TIME_NOW, Int64(3 * Double(NSEC_PER_SEC)))
+        delayedUndoBlurEffect(2)
+        
+        delayedBlurEffect(5, percentage:0.5)
+        delayedUndoBlurEffect(7)
+        delayedBlurEffect(9, percentage:0.7)
+        delayedUndoBlurEffect(11)
+        delayedBlurEffect(13, percentage:1.0)
+    }
+
+    func delayedBlurEffect(time:Double, percentage:Double) {
+        let delayTime = dispatch_time(DISPATCH_TIME_NOW, Int64(time * Double(NSEC_PER_SEC)))
+        
         dispatch_after(delayTime, dispatch_get_main_queue()) {
-            self.blurEffectView(enable: false, blurView: self.blurview)
+            self.blurEffectView(enable: true, blurView: self.blurview, percentage:percentage)
+        }
+    }
+
+    func delayedUndoBlurEffect(time:Double) {
+        let delayTime = dispatch_time(DISPATCH_TIME_NOW, Int64(time * Double(NSEC_PER_SEC)))
+        
+        dispatch_after(delayTime, dispatch_get_main_queue()) {
+            self.blurEffectView(enable: false, blurView: self.blurview, percentage:0)
         }
     }
     
-    func blurEffectView(enable enable: Bool, blurView: UIVisualEffectView!) {
+    func blurEffectView(enable enable: Bool, blurView: UIVisualEffectView!, percentage:Double) {
+        let animationTime = 0.5
+        
         let enabled = blurView.effect != nil
         guard enable != enabled else { return }
         
         switch enable {
         case true:
             let blurEffect = UIBlurEffect(style: .Dark)
-            UIView.animateWithDuration(1.5) {
+            UIView.animateWithDuration(animationTime) {
                 blurView.effect = blurEffect
             }
             
-            blurView.pauseAnimation(delay: 0.3)
+            blurView.pauseAnimation(delay: animationTime * percentage)
         case false:
             blurView.resumeAnimation()
             
