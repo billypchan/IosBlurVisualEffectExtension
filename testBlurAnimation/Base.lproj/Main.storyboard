@@ -42,6 +42,9 @@
                             <constraint firstAttribute="trailingMargin" secondItem="C8u-OJ-I3Y" secondAttribute="trailing" id="zce-mm-rcf"/>
                         </constraints>
                     </view>
+                    <connections>
+                        <outlet property="blurview" destination="C8u-OJ-I3Y" id="QSy-TS-WOb"/>
+                    </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="dkx-z0-nzr" sceneMemberID="firstResponder"/>
             </objects>
