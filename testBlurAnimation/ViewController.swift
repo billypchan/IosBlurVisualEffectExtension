@@ -33,21 +33,40 @@ extension UIView {
 class ViewController: UIViewController {
     
     @IBOutlet weak var blurview: UIVisualEffectView!
+    @IBOutlet weak var blurviewInView: UIVisualEffectView!
+    @IBOutlet weak var viewContainer: UIView!
+    
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        
+        viewContainer.center = CGPoint(x: viewContainer.center.x, y: viewContainer.center.y+viewContainer.frame.size.height)
+        
+        UIView.animateWithDuration(0.5, delay: 0.5, options:UIViewAnimationOptions.CurveLinear, animations: {
+            self.viewContainer.center = self.view.center
+            }, completion: {
+                (value: Bool) in
+        })
+        
+        self.delayedBlurEffect(self.blurviewInView, time:0, percentage: 0.2)
+    }
+    
     override func viewDidLoad() {
         super.viewDidLoad()
-        // Do any additional setup after loading the view, typically from a nib.
+        blurview.hidden = true
+        blurviewInView.effect = nil
         
+    }
+    
+    func testAnimationRemovedIssue(){
+        blurview.effect = nil
+        delayedBlurEffect(blurview, time:0, percentage: 0.7)
         blurview.center = CGPoint(x: blurview.center.x, y: blurview.center.y+blurview.frame.size.height)
-
-
-                blurview.effect = nil
+        
         UIView.animateWithDuration(0.5, delay: 0.5, options:UIViewAnimationOptions.CurveLinear, animations: {
             self.blurview.center = self.view.center
             }, completion: {
                 (value: Bool) in
-                        self.blurEffectView(enable: true, blurView: self.blurview, percentage:0.5)
         })
-        
     }
     
     ///The Hack works even the view is hidden
@@ -66,18 +85,18 @@ class ViewController: UIViewController {
         
         delayedUndoBlurEffect(2)
         
-        delayedBlurEffect(5, percentage:0.5)
+        delayedBlurEffect(blurview, time:5, percentage:0.5)
         delayedUndoBlurEffect(7)
-        delayedBlurEffect(9, percentage:0.7)
+        delayedBlurEffect(blurview, time:9, percentage:0.7)
         delayedUndoBlurEffect(11)
-        delayedBlurEffect(13, percentage:1.0)
+        delayedBlurEffect(blurview, time:13, percentage:1.0)
     }
     
-    func delayedBlurEffect(time:Double, percentage:Double) {
+    func delayedBlurEffect(blurview:UIVisualEffectView!, time:Double, percentage:Double) {
         let delayTime = dispatch_time(DISPATCH_TIME_NOW, Int64(time * Double(NSEC_PER_SEC)))
         
         dispatch_after(delayTime, dispatch_get_main_queue()) {
-            self.blurEffectView(enable: true, blurView: self.blurview, percentage:percentage)
+            self.blurEffectView(enable: true, blurView: blurview, percentage:percentage)
         }
     }
     
