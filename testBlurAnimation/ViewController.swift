@@ -1,3 +1,4 @@
+
 //
 //  ViewController.swift
 //  testBlurAnimation
@@ -7,6 +8,31 @@
 //
 
 import UIKit
+
+extension UIVisualEffectView {
+    ///NOTICE: this func will pause all other animations in the visual effect view! If you want to add other animation with this visual effect view, do it in a container view
+    func blurEffectView(enable enable: Bool, percentage:Double, animationTime:Double = 0.1) {
+        
+        let enabled = self.effect != nil
+        guard enable != enabled else { return }
+        
+        switch enable {
+        case true:
+            let blurEffect = UIBlurEffect(style: .Dark)
+            UIView.animateWithDuration(animationTime) {
+                self.effect = blurEffect
+            }
+            
+            self.pauseAnimation(delay: animationTime * percentage)
+        case false:
+            self.resumeAnimation()
+            
+            UIView.animateWithDuration(0.1) {
+                self.effect = nil
+            }
+        }
+    }
+}
 
 extension UIView {
     
@@ -32,38 +58,37 @@ extension UIView {
 
 class ViewController: UIViewController {
     
-    @IBOutlet weak var blurview: UIVisualEffectView!
     @IBOutlet weak var blurviewInView: UIVisualEffectView!
     @IBOutlet weak var viewContainer: UIView!
     
-    override func viewDidLayoutSubviews() {
-        super.viewDidLayoutSubviews()
-        
+    func animateTranslate() {
         viewContainer.center = CGPoint(x: viewContainer.center.x, y: viewContainer.center.y+viewContainer.frame.size.height)
         
-        UIView.animateWithDuration(0.5, delay: 0.5, options:UIViewAnimationOptions.CurveLinear, animations: {
+        UIView.animateWithDuration(3, delay: 0, options:UIViewAnimationOptions.CurveLinear, animations: {
             self.viewContainer.center = self.view.center
             }, completion: {
                 (value: Bool) in
         })
         
-        self.delayedBlurEffect(self.blurviewInView, time:0, percentage: 0.2)
     }
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        blurview.hidden = true
         blurviewInView.effect = nil
         
+        animateTranslate()
+        
+        /// When percentage < 0.1, the effect is not obivious
+        blurviewInView.blurEffectView(enable: true, percentage:0.2, animationTime:3)
     }
     
     func testAnimationRemovedIssue(){
-        blurview.effect = nil
-        delayedBlurEffect(blurview, time:0, percentage: 0.7)
-        blurview.center = CGPoint(x: blurview.center.x, y: blurview.center.y+blurview.frame.size.height)
+        blurviewInView.effect = nil
+        delayedBlurEffect(blurviewInView, time:0, percentage: 0.7)
+        blurviewInView.center = CGPoint(x: blurviewInView.center.x, y: blurviewInView.center.y+blurviewInView.frame.size.height)
         
         UIView.animateWithDuration(0.5, delay: 0.5, options:UIViewAnimationOptions.CurveLinear, animations: {
-            self.blurview.center = self.view.center
+            self.blurviewInView.center = self.view.center
             }, completion: {
                 (value: Bool) in
         })
@@ -71,32 +96,32 @@ class ViewController: UIViewController {
     
     ///The Hack works even the view is hidden
     func testBlurWhenHidden() {
-        blurview.hidden = true
-        blurEffectView(enable: true, blurView: blurview, percentage:0.7)
+        blurviewInView.hidden = true
+        blurviewInView.blurEffectView(enable: true, percentage:0.7)
         let delayTime = dispatch_time(DISPATCH_TIME_NOW, Int64(10 * Double(NSEC_PER_SEC)))
         
         dispatch_after(delayTime, dispatch_get_main_queue()) {
-            self.blurview.hidden = false
+            self.blurviewInView.hidden = false
         }
     }
     
     func testBlurInDifferentLevel(){
-        blurEffectView(enable: true, blurView: blurview, percentage:0.3)
+        blurviewInView.blurEffectView(enable: true, percentage:0.3)
         
         delayedUndoBlurEffect(2)
         
-        delayedBlurEffect(blurview, time:5, percentage:0.5)
+        delayedBlurEffect(blurviewInView, time:5, percentage:0.5)
         delayedUndoBlurEffect(7)
-        delayedBlurEffect(blurview, time:9, percentage:0.7)
+        delayedBlurEffect(blurviewInView, time:9, percentage:0.7)
         delayedUndoBlurEffect(11)
-        delayedBlurEffect(blurview, time:13, percentage:1.0)
+        delayedBlurEffect(blurviewInView, time:13, percentage:1.0)
     }
     
     func delayedBlurEffect(blurview:UIVisualEffectView!, time:Double, percentage:Double) {
         let delayTime = dispatch_time(DISPATCH_TIME_NOW, Int64(time * Double(NSEC_PER_SEC)))
         
         dispatch_after(delayTime, dispatch_get_main_queue()) {
-            self.blurEffectView(enable: true, blurView: blurview, percentage:percentage)
+            self.blurviewInView.blurEffectView(enable: true, percentage:percentage)
         }
     }
     
@@ -104,32 +129,9 @@ class ViewController: UIViewController {
         let delayTime = dispatch_time(DISPATCH_TIME_NOW, Int64(time * Double(NSEC_PER_SEC)))
         
         dispatch_after(delayTime, dispatch_get_main_queue()) {
-            self.blurEffectView(enable: false, blurView: self.blurview, percentage:0)
+            self.blurviewInView.blurEffectView(enable: false, percentage:0)
         }
     }
     
-    ///NOTICE: this func will pause all other animations! Match the pause time with other animation,
-    func blurEffectView(enable enable: Bool, blurView: UIVisualEffectView!, percentage:Double) {
-        let animationTime = 0.5
-        
-        let enabled = blurView.effect != nil
-        guard enable != enabled else { return }
-        
-        switch enable {
-        case true:
-            let blurEffect = UIBlurEffect(style: .Dark)
-            UIView.animateWithDuration(animationTime) {
-                blurView.effect = blurEffect
-            }
-            
-            blurView.pauseAnimation(delay: animationTime * percentage)
-        case false:
-            blurView.resumeAnimation()
-            
-            UIView.animateWithDuration(0.1) {
-                blurView.effect = nil
-            }
-        }
-    }
 }
 
